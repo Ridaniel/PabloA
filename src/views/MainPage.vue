@@ -32,8 +32,20 @@
             <v-list-item-title>{{ item.name }}</v-list-item-title>
             <v-list-item-subtitle>Cantidad: {{ item.quantity }}</v-list-item-subtitle>
           </v-list-item-content>
-          <v-btn icon @click="removeItem(index)">
-            <v-icon color="red">mdi-delete</v-icon>
+          <!-- Input to specify quantity to delete -->
+          <v-text-field 
+            v-model.number="deleteAmounts[index]"
+            type="number"
+            placeholder="Cantidad a eliminar"
+            class="delete-quantity-input">
+          </v-text-field>
+          <!-- Button to delete specified quantity -->
+          <v-btn @click="deleteSpecifiedAmount(index)" icon color="orange">
+            <v-icon>mdi-minus</v-icon>
+          </v-btn>
+          <!-- Button to delete an item entirely -->
+          <v-btn @click="removeItem(index)" icon color="red">
+            <v-icon>mdi-delete</v-icon>
           </v-btn>
         </v-list-item>
       </v-list-item-group>
@@ -49,7 +61,8 @@ export default {
         name: '',
         quantity: 0
       },
-      items: JSON.parse(localStorage.getItem('inventoryItems') || '[]')
+      items: JSON.parse(localStorage.getItem('inventoryItems') || '[]'),
+      deleteAmounts: {}
     };
   },
   computed: {
@@ -59,7 +72,7 @@ export default {
   },
   methods: {
     addItem() {
-      if (!this.isValid) return;  // No agregar si las validaciones no pasan
+      if (!this.isValid) return;
 
       this.newItem.quantity = parseInt(this.newItem.quantity, 10); 
       this.items.push({ ...this.newItem });
@@ -70,6 +83,18 @@ export default {
     removeItem(index) {
       this.items.splice(index, 1);
       this.updateLocalStorage();
+    },
+    deleteSpecifiedAmount(index) {
+      const amountToDelete = this.deleteAmounts[index] || 0;
+      if (amountToDelete <= 0) return;
+
+      this.items[index].quantity -= amountToDelete;
+
+      if (this.items[index].quantity <= 0) {
+        this.removeItem(index);
+      } else {
+        this.updateLocalStorage();
+      }
     },
     updateLocalStorage() {
       localStorage.setItem('inventoryItems', JSON.stringify(this.items));
@@ -92,5 +117,9 @@ export default {
 }
 .mb-5 {
   margin-bottom: 2rem;
+}
+.delete-quantity-input {
+  max-width: 100px;
+  margin-right: 10px;
 }
 </style>
